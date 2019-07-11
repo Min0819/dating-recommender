@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang=“en”>
+<head>
+    <meta charset="utf-8">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src='https://rawgit.com/karpathy/tsnejs/master/tsne.js'></script>
+</head>
+<body>
+	<script type="text/javascript">
+		// var width = 960, height = 500;
+		var width = 9600, height = 5000;
+
+		var svg = d3.select("body").append("svg")
+			.attr("width", width)
+			.attr("height", height);
+
+		var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+		var radiusScale = d3.scaleLinear()
+			.domain([0, 2])
+			.range([5, 30])
+
+		d3.csv('node_new.csv', function (node_data){
+			d3.csv('edge_new.csv', function (edge_data){
+				// DO SOME THINGS HERE
+				// Initialize force simulation
+				const nodes = node_data;
+				const links = edge_data.map(function (a) {
+					return {source: Number(a.source), target: Number(a.target)}
+				});
+
+				console.log(nodes)
+				console.log(links)
+
+				var simulation = d3.forceSimulation(nodes)
+					.force("charge", d3.forceManyBody().strength(-500))
+					.force("link", d3.forceLink(links).distance(80).strength(0.01).iterations(10))
+					.force("x", d3.forceX())
+					.force("y", d3.forceY())
+					.on('tick', tick);
+
+				// Set attributes for line and node
+				var lineG = g.append("g")
+						.attr("stroke", "#000")
+						.attr("stroke-width", 1.5)
+					.selectAll("line")
+					.data(links)
+					.enter().append("line");
+
+				var nodeG = g.append("g")
+						.attr("stroke", "black")
+						.attr("stroke-width", 1.5)
+					.selectAll("circle")
+					.data(nodes)
+					.enter().append("circle");
+
+				// Larger radius for nodes with larger PageRank
+				function tick (){
+					lineG.attr("x1", function(d) {return d.source.x; })
+						.attr("y1", function(d) {return d.source.y; })
+						.attr("x2", function(d) {return d.target.x; })
+						.attr("y2", function(d) {return d.target.y; });
+					nodeG.attr("cx", function(d) {return d.x; })
+						.attr("cy", function(d) {return d.y; })
+						.attr("r", function(d) {return radiusScale(+2); });
+				}
+
+				// Same color for nodes within same components
+				var colorScale = d3.scaleOrdinal(d3.schemeCategory20);
+				nodeG.style("fill", function (d){
+					console.log(d.wave)
+					if (d.wave == 1){
+						return "#faf"
+					}else{
+						return "#fea"
+					}
+					
+				});
+
+				
+			});
+		});	 
+	</script>
+</body>
+</html>
